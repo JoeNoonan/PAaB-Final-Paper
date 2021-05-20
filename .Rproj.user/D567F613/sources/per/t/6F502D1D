@@ -1,0 +1,32 @@
+{
+    "id": "6F502D1D",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1621425098238.0,
+    "source_on_save": false,
+    "relative_order": 8,
+    "properties": {
+        "expression": "df %>% mutate(not_significant = ifelse(conf.low < 1 & conf.high >      1, 1, 0))",
+        "caption": "df %>% mutate(not_significant = ifelse(conf.low < 1 & conf.high > ",
+        "totalObservations": 24,
+        "displayedObservations": 24,
+        "variables": 10,
+        "cacheKey": "A5ECB56F",
+        "object": "",
+        "environment": "_rs_no_env",
+        "contentUrl": "grid_resource/gridviewer.html?env=_rs_no_env&obj=&cache_key=A5ECB56F&max_cols=50",
+        "preview": 0
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1621418745,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1621425098238,
+    "read_only": false,
+    "read_only_alternatives": []
+}

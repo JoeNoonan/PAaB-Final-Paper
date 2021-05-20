@@ -1,0 +1,25 @@
+{
+    "id": "5BFC802D",
+    "path": "C:/R_projects/PAaB Final Paper/scripts/evs_analysis.R",
+    "project_path": "scripts/evs_analysis.R",
+    "type": "r_source",
+    "hash": "4017923970",
+    "contents": "",
+    "dirty": false,
+    "created": 1621244117511.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "624,0",
+        "scrollLine": "609"
+    },
+    "folds": "275|30|281|0|\n357|28|362|9|\n372|27|377|9|\n459|36|470|15|\n",
+    "lastKnownWriteTime": 1621426567,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1621426567692,
+    "read_only": false,
+    "read_only_alternatives": []
+}

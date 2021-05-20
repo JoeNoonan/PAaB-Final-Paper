@@ -1,0 +1,32 @@
+{
+    "id": "199E87A6",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1621423711279.0,
+    "source_on_save": false,
+    "relative_order": 6,
+    "properties": {
+        "expression": "m2_final_predict_df",
+        "caption": "m2_final_predict_df",
+        "totalObservations": 12,
+        "displayedObservations": 12,
+        "variables": 10,
+        "cacheKey": "E647D9AC",
+        "object": "m2_final_predict_df",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=m2_final_predict_df&cache_key=E647D9AC&max_cols=50",
+        "preview": 0
+    },
+    "folds": "",
+    "lastKnownWriteTime": 7234316338103214882,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1621423711279,
+    "read_only": false,
+    "read_only_alternatives": []
+}
