@@ -36,7 +36,7 @@ new_democracies <-  c("Slovenia", "Bulgaria", "Croatia",
 
 
 evs_df_final <- evs_df %>% 
-  ### Filter consolidated Democracies plus France 
+  ### Filter consolidated Democracies
   filter(country_name_text %in% c("Albania", "Austria", "Germany", "Iceland", 
                         "Netherlands", "Spain", "Switzerland",
                         "Slovenia", "Bulgaria", "Croatia", 
@@ -76,13 +76,13 @@ evs_df_final <- evs_df %>%
          
          non_dem_system = system_leader_binary + system_experts_binary + system_army_binary,
          
-         commited_dem = ifelse(system_democracy_binary == 1 & non_dem_system == 0, "Commited Democrat", 
+         commited_dem = ifelse(system_democracy_binary == 1 & non_dem_system == 0, "Committed Democrat", 
                                ifelse(system_democracy_binary == 1 & non_dem_system > 0, "Noncommited Democrat",
                                       ifelse(system_democracy_binary  == 0, "Non-Democrat", NA))),
          
-         commited_dem = factor(commited_dem, levels = c("Non-Democrat", "Noncommited Democrat", "Commited Democrat")),
+         commited_dem = factor(commited_dem, levels = c("Non-Democrat", "Noncommited Democrat", "Committed Democrat")),
          
-         commit_dem_binary = as.numeric(ifelse(commited_dem == "Commited Democrat", 1, 0)),
+         commit_dem_binary = as.numeric(ifelse(commited_dem == "Committed Democrat", 1, 0)),
   
          auth_child_rearing = v85+v95,
          lib_child_rearing = v86+v89+v90,
@@ -127,7 +127,7 @@ evs_df_final <- evs_df %>%
          rural_urban = ifelse(as.numeric(v276_r) < 0, NaN, as.numeric(v276_r)),
          income = ifelse(as.numeric(v261_r) < 0, NaN, as.numeric(v261_r)),
          recent_dem = ifelse(country_name_text %in% new_democracies, 1, 0)) %>% 
-  dplyr::select(country, country_name_text, gweight, pweight, polImportant, respect_auth, polint, polint_rev, gen_trust, gen_trust_rev, 
+select(country, country_name_text, gweight, pweight, polImportant, respect_auth, polint, polint_rev, gen_trust, gen_trust_rev, 
                 system_democracy, system_democracy_binary,
                 system_leader, system_leader_binary,
                 system_experts, system_experts_binary, 

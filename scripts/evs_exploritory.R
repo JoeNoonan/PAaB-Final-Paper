@@ -262,3 +262,18 @@ m1_predict_plot <- ggplot(m1_predict, aes(x = combined_child_rearing  , y = pred
 
 ggsave("output/graphs/m1_predict.png", plot = m1_predict_plot, width = 10.685, height = 8, units = "cm", scale = 1, dpi = 300)
 
+
+
+
+### Get Standard Errors
+### https://www.andrewheiss.com/blog/2016/04/25/convert-logistic-regression-standard-errors-to-odds-ratios-with-r/
+
+get.or.se <- function(model) {
+  broom::tidy(model) %>%
+    mutate(or = exp(estimate),
+           var.diag = diag(vcov(model)),
+           or.se = sqrt(or^2 * var.diag)) %>%
+    select(or.se) %>% unlist %>% unname
+}
+
+get.or.se(m1)
