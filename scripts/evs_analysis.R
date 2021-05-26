@@ -90,12 +90,17 @@ correlate(corr_df)
 
 combined_summary_df_unweighted <- evs_df_final %>% 
   filter(!is.na(commit_dem_binary),  !is.na(combined_child_rearing)) %>% 
-  count(combined_child_rearing, commit_dem_binary) %>% 
+  count(combined_child_rearing, commit_dem_binary, name = "unweighted_n") %>% 
   group_by(combined_child_rearing) %>% 
-  mutate(total = sum(n),
-         Percent = n/total, 
+  mutate(unweighted_total = sum(unweighted_n),
+         unweighted_Percent = unweighted_n/unweighted_total, 
          commited_dem_name = ifelse(commit_dem_binary == 1, "Comitted Democrat",
-                                    ifelse(commit_dem_binary == 0, "Other", NA))) 
+                                    ifelse(commit_dem_binary == 0, "Other", NA))) %>% 
+  ungroup() %>%
+  mutate(conf_lower = as.numeric(moe(unweighted_Percent, unweighted_total)$conf.lower)/100,
+         conf_upper = as.numeric(moe(unweighted_Percent, unweighted_total)$conf.upper)/100) 
+
+
 
 ### Weighted with confidence intervals
 
@@ -111,18 +116,6 @@ combined_summary_df_weighted <- evs_df_final %>%
   mutate(conf_lower = as.numeric(moe(Percent, total)$conf.lower)/100,
          conf_upper = as.numeric(moe(Percent, total)$conf.upper)/100) 
 
-
-combined_summary_df_unweighted <- evs_df_final %>% 
-  filter(!is.na(commit_dem_binary),  !is.na(combined_child_rearing)) %>% 
-  count(combined_child_rearing, commit_dem_binary, name = "unweighted_n") %>% 
-  group_by(combined_child_rearing) %>% 
-  mutate(unweighted_total = sum(unweighted_n),
-         unweighted_Percent = unweighted_n/unweighted_total, 
-         commited_dem_name = ifelse(commit_dem_binary == 1, "Comitted Democrat",
-                                    ifelse(commit_dem_binary == 0, "Other", NA))) %>% 
-  ungroup() %>%
-  mutate(conf_lower = as.numeric(moe(unweighted_Percent, unweighted_total)$conf.lower)/100,
-         conf_upper = as.numeric(moe(unweighted_Percent, unweighted_total)$conf.upper)/100) 
 
 
 
@@ -183,7 +176,7 @@ system_experts_binary_df <- non_commits_type_df %>%
          Percent = system_experts_binary_n/total)
 
 
-### Summary of commited dems by country
+### Summary of committed dems by country
 
 commited_dems_country_weighted_df <- evs_df_final %>% 
   filter(!is.na(commit_dem_binary), !is.na(combined_child_rearing)) %>% 
@@ -211,9 +204,11 @@ commited_dems_country_unweighted_df <- evs_df_final %>%
          conf_upper = as.numeric(moe(Percent, total)$conf.upper)/100)%>% 
   mutate(country_name_text  = fct_reorder(country_name_text, Percent)) 
 
-### Plot % of commited democrats by country
 ### Create color pallete that will be used throughout 
 color_pallete <- tableau_color_pal('Tableau 10')(4)
+
+### Plot Figure 1. % of commited democrats by country
+### Used in final paper
 
 df <- filter(commited_dems_country_weighted_df, commited_dem_name == "Commited Democrat") %>% 
   mutate(country_name_text  = fct_reorder(country_name_text, Percent),
@@ -258,6 +253,7 @@ ggsave("output/graphs/europe_commited_dems_plot.png", plot = europe_commited_dem
 
 
 ### Plot Figure 2: ACRV by Percentage commited democratic
+### Used in final Paper 
 
 grouped_bar_plot <- ggplot(combined_summary_df_weighted, 
        aes(x= combined_child_rearing,
@@ -303,7 +299,8 @@ evs_df_final_old <-  filter(evs_df_final, recent_dem == 0)
 evs_df_final_new <-  filter(evs_df_final, recent_dem == 1)
 
 
-### Model 1. Simple bivarient with FE 
+### Model 1. Simple bivarient with FE
+### Not reported in final paper due to space concerns. 
 
 m1 <- glm(commit_dem_binary ~ combined_child_rearing + country_name_text, family = binomial, data = evs_df_final) 
 m1_old <- glm(commit_dem_binary ~ combined_child_rearing + country_name_text, family = binomial, data = evs_df_final_old)
@@ -363,6 +360,7 @@ model_1 <-
     tab_spanner = c("**Full Sample**", "**New Democracies**", "**Old Democracies**"))
 
 ### Save Reg Table 
+### Did not use in final paper
 model_1 %>% 
 as_flex_table() %>%
 flextable::save_as_docx(path = paste0(getwd(),"/output/model_1.docx"))
@@ -370,7 +368,7 @@ flextable::save_as_docx(path = paste0(getwd(),"/output/model_1.docx"))
 ### Model 2. Controls 
 ### Used in the final paper
 ### gender, age, education, political interest, generalized trust. 
-
+### Too much missinginess with income and rural?urban 
 
 m2 <- glm(commit_dem_binary ~ combined_child_rearing + sex + age_grp + educ + polint_rev + gen_trust_rev +country_name_text, data = evs_df_final, family = "binomial")
 m2_old <- glm(commit_dem_binary ~ combined_child_rearing + sex + age_grp + educ + polint_rev + gen_trust_rev + country_name_text, data = evs_df_final_old, family = "binomial")
@@ -414,13 +412,11 @@ tidy_m2_old_exp <- broom::tidy(m2_old, exponentiate = TRUE,  conf.int= TRUE)
 tidy_m2_new_exp <- broom::tidy(m2_new, exponentiate = TRUE,  conf.int= TRUE)
 
 ### Publication ready tables
-
 m2_reg_table <-tbl_regression(m2, exponentiate = TRUE) %>%  add_n() 
 m2_old_table <- tbl_regression(m2_old, exponentiate = TRUE) %>%  add_n() 
 m2_new_table <- tbl_regression(m2_new, exponentiate = TRUE) %>%  add_n()
 
 ### Final model 2
-
 model_2 <-
   tbl_merge(
     tbls = list(m2_reg_table, m2_old_table, m2_new_table),
@@ -433,6 +429,7 @@ model_2 %>%
 
 
 ### Model 2 - not exponentiated publication ready tables
+### Not used in final paper.
 
 m2_reg_table_org <-tbl_regression(m2) %>%  add_n() %>% add_p() 
 m2_old_table_org <- tbl_regression(m2_old) %>%  add_n() %>% add_p() 
@@ -451,7 +448,8 @@ model_2_org %>%
   flextable::save_as_docx(path = paste0(getwd(),"/output/model_2_org.docx"))
 
 
-#### running models on the disaggergated system questions 
+#### running models on the disaggergated system questions
+### Reported in final paper 
 
 m2_leader <- glm(system_leader_binary ~ combined_child_rearing + sex + age_grp + educ + polint_rev + gen_trust_rev +country_name_text, data = evs_df_final, family = "binomial")
 m2_experts <- glm(system_experts_binary ~ combined_child_rearing + sex + age_grp + educ + polint_rev + gen_trust_rev + country_name_text, data = evs_df_final, family = "binomial")
@@ -488,6 +486,7 @@ model_2_systems %>%
 
 ### Running committed democrats model for every country
 ####  Run Model 1 for every country
+#### Not used in final paper
 
 country_list <- unique(evs_df_final$country_name_text)
 
@@ -519,6 +518,7 @@ europe_m2 <- bind_rows(m2_country_list, .id = "country_name_text")
 
 
 #### General Model 2 prediction plots
+#### Reported in paper
 #### https://druedin.com/2016/01/16/predicted-probabilities-in-r/
 
 m2_no_fe_old <- glm(commit_dem_binary ~ combined_child_rearing + sex + age_grp + educ + polint_rev + gen_trust_rev, data = evs_df_final_old, family = "binomial")
@@ -596,7 +596,8 @@ m2_predict_plot <- ggplot(m2_final_predict_df, aes(x = combined_child_rearing ,
 ggsave("output/graphs/m2_predict_new_old.png", plot = m2_predict_plot, width = 10.685, height = 8, units = "cm", scale = 1, dpi = 300)
 
 
-#### Prediction non-democratic system endorsement. 
+#### Prediction non-democratic system endorsement.
+#### Not reported in paper due to space concerns. 
 #### https://druedin.com/2016/01/16/predicted-probabilities-in-r/
 
 m2_leader_no_fe <- glm(system_leader_binary ~ combined_child_rearing + sex + age_grp + educ + polint_rev + gen_trust_rev, data = evs_df_final, family = "binomial")
@@ -641,10 +642,10 @@ m2_military_predict <- with(evs_df_final, data.frame(combined_child_rearing = -3
                                                    polint_rev = mean(polint_rev, na.rm = TRUE),
                                                    gen_trust_rev = mean(gen_trust_rev, na.rm = TRUE)))
 
-preds_military<- predict(m2_army_no_fe, m2_millitary_predict, type="response", se.fit=TRUE)
+preds_military<- predict(m2_army_no_fe, m2_military_predict, type="response", se.fit=TRUE)
 m2_military_predict$predf <- preds_military$fit # predicted
-m2_military_predict$lower <- preds_military$fit - (1.96*preds_millitary$se.fit) # lower bounds
-m2_military_predict$upper <- preds_military$fit + (1.96*preds_millitary$se.fit) # upper 
+m2_military_predict$lower <- preds_military$fit - (1.96*preds_military$se.fit) # lower bounds
+m2_military_predict$upper <- preds_military$fit + (1.96*preds_military$se.fit) # upper 
 m2_military_predict$variable <- "Military Rule" 
 
 m2_non_dem_system_predict_df <- rbind(m2_leader_predict, m2_expert_predict, m2_military_predict) 
@@ -656,9 +657,10 @@ m2_non_dem_system_predict_plot <- ggplot(m2_non_dem_system_predict_df, aes(x = c
                                                    group=variable, 
                                                    color=variable,
                                                    fill = variable,
-                                                   ymin = lower, ymax = upper)) + 
+                                                   ymin = lower,
+                                                   ymax = upper)) + 
   facet_wrap(~variable)+
-  geom_line(size = 1)+
+  geom_line(size = .25)+
   geom_ribbon(alpha =  .5)+
   scale_fill_manual(values = color_pallete[1:3])+
   scale_color_manual(values = color_pallete[1:3])+
@@ -684,21 +686,7 @@ m2_non_dem_system_predict_plot <- ggplot(m2_non_dem_system_predict_df, aes(x = c
          panel.grid = element_line(colour = "grey70"))+
   guides(colour = guide_legend(nrow = 1, byrow =  TRUE)) 
 
-ggsave("output/graphs/m2_predict_new_old.png", plot = m2_predict_plot, width = 10.685, height = 8, units = "cm", scale = 1, dpi = 300)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ggsave("output/graphs/extra/m2_non_dem_system_predict_plot.png", plot = m2_non_dem_system_predict_plot, width = 10.685, height = 8, units = "cm", scale = 1, dpi = 300)
 
 ### Create Eurpoean Prediction Dataset
 
@@ -713,7 +701,7 @@ ggsave("output/graphs/m2_predict_new_old.png", plot = m2_predict_plot, width = 1
   m1_predict_eu$lower <- preds$fit - (1.96*preds$se.fit) # lower bounds
   m1_predict_eu$upper <- preds$fit + (1.96*preds$se.fit) # upper 
   m1_predict_eu$country_name_text <- {{x}}
-  m1_predict_eu}
+  #m1_predict_eu}
 
 #m1_predict_country_list <- lapply(country_list, m1_predict_function)
 #names(m1_predict_country_list) <- country_list
@@ -721,12 +709,40 @@ ggsave("output/graphs/m2_predict_new_old.png", plot = m2_predict_plot, width = 1
 #m1_predict_europe <- bind_rows(m1_predict_country_list, .id = "country_name_text")
 
 
-#### Not reported in paper 
-#### M1: Create predict plot with facet_wrap for all countries 
+### Create Eurpoean Prediction Dataset
+  
+  m2_predict_function <- function(x){
+  df <- filter(evs_df_final, country_name_text %in% {{x}})
+  m2 <- glm(commit_dem_binary ~ combined_child_rearing + sex + age_grp + educ + polint_rev + gen_trust_rev, family = binomial, data = df)
+  
+  ### Create new prediction Set
+  m2_predict_df <- with(df, data.frame(combined_child_rearing = -3:2,
+                                                         sex=mean(sex, na.rm=TRUE), 
+                                                         age_grp=mean(age_grp, na.rm=TRUE),
+                                                         educ = mean(educ, na.rm = TRUE),
+                                                         polint_rev = mean(polint_rev, na.rm = TRUE),
+                                                         gen_trust_rev = mean(gen_trust_rev, na.rm = TRUE)))
+  
+  preds<- predict(m2, m2_predict_df, type="response", se.fit=TRUE)
+  m2_predict_df$predf <- preds$fit # predicted
+  m2_predict_df$lower <- preds$fit - (1.96*preds$se.fit) # lower bounds
+  m2_predict_df$upper <- preds$fit + (1.96*preds$se.fit) # upper 
+  m2_predict_df$country_name_text <- {{x}}
+    m2_predict_df
+  }
+  
+  m2_predict_country_list <- lapply(country_list, m2_predict_function)
+  names(m2_predict_country_list) <- country_list
+  
+  m2_predict_europe <- bind_rows(m2_predict_country_list, .id = "country_name_text")
 
-#m1_predict_eu_plot <- ggplot(m1_predict_europe, aes(x = combined_child_rearing  , y = predf, ymin = lower, ymax = upper)) + 
+
+#### Not reported in paper 
+#### M2: Create predict plot with facet_wrap for all countries 
+
+m2_predict_eu_plot <- ggplot(m2_predict_europe, aes(x = combined_child_rearing  , y = predf, ymin = lower, ymax = upper)) + 
   geom_line()+
-  geom_ribbon(alpha =  .25, fill = "#111344" , colour=NA)+
+  geom_ribbon(alpha =  .25, fill = color_pallete[1] , colour=NA)+
   facet_wrap(~country_name_text)+
   ylab("Predicted probability of \n being a committed democrat")+
   xlab("Authoritarian Childrearing Values") +
@@ -751,11 +767,12 @@ ggsave("output/graphs/m2_predict_new_old.png", plot = m2_predict_plot, width = 1
          panel.grid = element_line(colour = "grey70"))+
   guides(colour = guide_legend(nrow = 1, byrow =  TRUE)) 
 
-ggsave("output/graphs/m1_predict_eu_plot.png", plot = m1_predict_eu_plot, width = 10.685, height = 8, units = "cm", scale = 2, dpi = 300)
+ggsave("output/graphs/extra/m2_predict_europe_plot.png", plot = m2_predict_eu_plot, width = 10.685, height = 8, units = "cm", scale = 2, dpi = 300)
 
 
 
 #### Europe M1 Odds Chart 
+### Not used as M1 wasn't featured in the paper.
 #df <- filter(europe_m1, term == "combined_child_rearing") %>% 
   arrange(desc(estimate)) %>% 
   mutate(country_name_text  = fct_reorder(country_name_text, estimate))
@@ -789,7 +806,7 @@ ggsave("output/graphs/europe_m1_plot.png", plot = europe_m1_plot, width = 10.685
 
 
 #### Europe M2 Odds facet 
-#### Used in final paper
+#### Not used in final paper 
 
 df <- filter(europe_m2, term == "combined_child_rearing") %>% 
   arrange(desc(estimate)) %>% 
@@ -827,13 +844,10 @@ europe_m2_plot_facet <- ggplot(df, aes(x = estimate, y = country_name_text, colo
          panel.grid = element_line(colour = "grey70"))+
   guides(colour = guide_legend(nrow = 1, byrow =  TRUE)) 
 
-ggsave("output/graphs/europe_m2_plot_facet.png", plot = europe_m2_plot_facet, width = 12, height = 8, units = "cm", scale = 1, dpi = 300)
+ggsave("output/graphs/extra/europe_m2_plot_facet.png", plot = europe_m2_plot_facet, width = 12, height = 8, units = "cm", scale = 1, dpi = 300)
 
-### summary statsitics
-### Used in final paper 
 
-### Export findings
-
+### Export cleanish dataset for results by country in europe. 
 europe_m2_cleaned <- europe_m2 %>% 
   filter(term != "(Intercept)") %>% 
   mutate(`Odds Ratio` = estimate,

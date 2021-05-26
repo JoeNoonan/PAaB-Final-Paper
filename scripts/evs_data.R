@@ -1,7 +1,5 @@
 library(tidyverse)
-library(srvyr)
 library(here)
-library(corrr)
 library(haven)
 library(tidymetadata)
 library(surveytoolbox)
@@ -28,12 +26,14 @@ evs_df <- left_join(evs_country_name_df, evs_df)
 
 ### DEMOS: gender, age, education
 ### Could not control for wealth, rural-urban due to high levels of missingness 
-### Attitudinal: political interest, interpersonal trust, and political knowledge.
+### Attitudinal: political interest, interpersonal trust
 
 new_democracies <-  c("Slovenia", "Bulgaria", "Croatia",
                       "Czechia","Poland", "Slovakia",
                       "Hungary", "Lithuania", "Estonia", "Romania", "Albania")
 
+### Data cleaning scripts here used Wuttke et al.’s (2020) replication material as a guideline: 
+### https://doi.org/10.7910/DVN/Y5Y6VD,
 
 evs_df_final <- evs_df %>% 
   ### Filter consolidated Democracies
